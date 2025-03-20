@@ -51,8 +51,10 @@ int main(void)
     {
     if (UARTCharsAvail(UART0_BASE))
         {
+            //UARTgets(data, sizeof(data));
+            //data[sizeof(data) - 1] = '\0'; 
+            memset(data, 0, sizeof(data));//limpieza del data
             UARTgets(data, sizeof(data));
-            data[sizeof(data) - 1] = '\0'; 
 
             if (strncmp(data, "buzzer", 6) == 0) 
             {
