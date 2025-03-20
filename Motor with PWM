@@ -1,0 +1,43 @@
+
+
+import RPi.GPIO as GPIO
+from time import sleep
+IN1 = 17  
+IN2 = 27 
+ENA = 12  
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(IN1, GPIO.OUT)
+GPIO.setup(IN2, GPIO.OUT)
+GPIO.setup(ENA, GPIO.OUT)
+
+pwm = GPIO.PWM(ENA, 1000)
+pwm.start(0)
+
+GPIO.output(IN1, GPIO.HIGH)
+GPIO.output(IN2, GPIO.LOW)
+
+def leer_duty_cycle():
+    try:
+        with open("dutycycle.txt", "r") as file:
+            duty = int(file.read().strip())
+            if 0 <= duty <= 100:
+                return duty
+            else:
+                print("fuera de rango (0-100)")
+                return 50
+    except:
+        print("⚠ Error leyendo el archivo.")
+        return 50
+
+try:
+    while True:
+        duty_cycle = leer_duty_cycle()
+        pwm.ChangeDutyCycle(duty_cycle)
+        print(f"Duty Cycle aplicado: {duty_cycle}%")
+        sleep(2)  # Se actualiza cada 2 segundos
+
+except KeyboardInterrupt:
+    pwm.stop()
+    GPIO.cleanup()
