@@ -1,16 +1,14 @@
 import serial
 from time import sleep
 
-# Configurar la conexión UART en la Raspberry Pi
-ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)  # Puerto y baudios
-
-ser.reset_input_buffer()  # Limpia el buffer de entrada
-sleep(2)  # Espera para estabilizar la conexión
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser.reset_input_buffer()
+sleep(2)
 
 while True:
+    raw = ser.readline()
     try:
-        if ser.in_waiting > 0:  # Si hay datos disponibles en el buffer
-            value = ser.readline().decode('utf-8').rstrip()  # Leer línea completa
-            print(f"Datos recibidos: {value}")  # Imprimir datos
-    except Exception as e:
-        print(f"Error: {e}")
+        value = raw.decode('utf-8').rstrip()
+        print(f"Datos decodificados: {value}")
+    except UnicodeDecodeError:
+        print(f"Bytes crudos: {raw}")
