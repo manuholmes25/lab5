@@ -1,0 +1,126 @@
+import RPi.GPIO as GPIO
+import serial
+from time import sleep
+
+# Pines de control del motor
+IN1 = 17
+IN2 = 27
+ENA = 12  # PWM
+
+# Setup GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(IN1, GPIO.OUT)
+GPIO.setup(IN2, GPIO.OUT)
+GPIO.setup(ENA, GPIO.OUT)
+
+# Inicializar PWM
+pwm = GPIO.PWM(ENA, 1000)
+pwm.start(0)
+
+# Dirección fija: adelante
+GPIO.output(IN1, GPIO.HIGH)
+GPIO.output(IN2, GPIO.LOW)
+
+# Función para leer duty desde archivo
+def leer_duty_cycle():
+    try:
+        with open("dutycycle.txt", "r") as file:
+            duty = int(file.read().strip())
+            if 0 <= duty <= 100:
+                return duty
+            else:
+                print("Valor fuera de rango (0-100)")
+                return 50
+    except:
+        print("Error leyendo el archivo.")
+        return 50
+
+# UART
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser.reset_input_buffer()
+sleep(2)
+print("UART conectado en /dev/ttyACM0")
+
+try:
+    while True:
+        if ser.in_waiting > 0:
+            raw = ser.readline()
+            try:
+                value = raw.decode('utf-8').strip()
+                print(f"Tiva dice: {value}")
+
+                if value == "motor1":
+                    duty = leer_duty_cycle()
+                    pwm.ChangeDutyCycle(duty)
+                    print(f"Motor 1 activado con {duty}%")
+
+                elif value == "motor2":
+                    duty = leer_duty_cycle()
+                    pwm.ChangeDutyCycle(duty)
+                    print(f"Motor 2 activado con {duty}%")
+
+            except UnicodeDecodeError:
+                print(f"Bytes ilegibles: {raw}")
+        
+        sleep(0.1)
+
+except KeyboardInterrupt:
+    print("Programa terminado por el usuario.")
+
+finally:
+    pwm.stop()
+    GPIO.cleanup()
+    ser.close()
+
+
+
+
+"""import serial
+from time import sleep
+
+# Configurar la conexión UART en la Raspberry Pi
+try:
+    ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)  
+    ser.reset_input_buffer()  # Limpia el buffer de entrada
+    sleep(2)  # Espera para estabilizar la conexión
+    print(f"UART conectado: {ser.port}")
+except serial.SerialException as e:
+    print(f"No se pudo abrir el puerto serial: {e}")
+    exit()
+
+while True:
+    try:
+        if ser.in_waiting > 0:  # Si hay datos disponibles en el buffer
+            value = ser.readline().decode('utf-8').rstrip()  # Leer línea completa
+            print(f"Datos recibidos: {value}")
+        sleep(0.1)  # Evita uso excesivo de CPU
+    except UnicodeDecodeError:
+        raw = ser.readline()
+        print(f"Bytes crudos recibidos (no UTF-8): {raw}")
+    except serial.SerialException as e:
+        print(f"Error con el puerto serial: {e}")
+        break
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        break
+        """
+
+
+
+
+"""import serial
+from time import sleep
+
+# Configurar la conexión UART en la Raspberry Pi
+ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)  
+ser.reset_input_buffer()  # Limpia el buffer de entrada
+sleep(2)  # Espera para estabilizar la conexión
+
+while True:
+    try:
+        if ser.in_waiting > 0:  # Si hay datos disponibles en el buffer
+            value = ser.readline().decode('utf-8').rstrip()  # Leer línea completa
+            print(f"Datos recibidos: {value}")  # Imprimir datos
+    except Exception as e:
+        print(f"Error: {e}")"""
